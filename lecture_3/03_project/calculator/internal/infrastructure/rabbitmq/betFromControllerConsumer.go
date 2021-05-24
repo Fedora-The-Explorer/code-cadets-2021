@@ -7,17 +7,17 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/superbet-group/code-cadets-2021/lecture_3/03_project/controller/internal/infrastructure/rabbitmq/models"
+	"github.com/superbet-group/code-cadets-2021/lecture_3/03_project/calculator/internal/infrastructure/rabbitmq/models"
 )
 
 // BetReceivedConsumer consumes received bets from the desired RabbitMQ queue.
-type BetReceivedConsumer struct {
+type BetFromControllerConsumer struct {
 	channel Channel
 	config  ConsumerConfig
 }
 
 // NewBetReceivedConsumer creates and returns a new BetReceivedConsumer.
-func NewBetReceivedConsumer(channel Channel, config ConsumerConfig) (*BetReceivedConsumer, error) {
+func NewBetFromControllerConsumer(channel Channel, config ConsumerConfig) (*BetFromControllerConsumer, error) {
 	_, err := channel.QueueDeclare(
 		config.Queue,
 		config.DeclareDurable,
@@ -30,7 +30,7 @@ func NewBetReceivedConsumer(channel Channel, config ConsumerConfig) (*BetReceive
 		return nil, errors.Wrap(err, "bet received consumer initialization failed")
 	}
 
-	return &BetReceivedConsumer{
+	return &BetFromControllerConsumer{
 		channel: channel,
 		config:  config,
 	}, nil
@@ -38,7 +38,7 @@ func NewBetReceivedConsumer(channel Channel, config ConsumerConfig) (*BetReceive
 
 // Consume consumes messages until the context is cancelled. An error will be returned if consuming
 // is not possible.
-func (c *BetReceivedConsumer) Consume(ctx context.Context) (<-chan models.BetReceived, error) {
+func (c *BetFromControllerConsumer) Consume(ctx context.Context) (<-chan models.BetFromController, error) {
 	msgs, err := c.channel.Consume(
 		c.config.Queue,
 		c.config.ConsumerName,
@@ -52,11 +52,11 @@ func (c *BetReceivedConsumer) Consume(ctx context.Context) (<-chan models.BetRec
 		return nil, errors.Wrap(err, "bet received consumer failed to consume messages")
 	}
 
-	betsReceived := make(chan models.BetReceived)
+	bets := make(chan models.BetFromController)
 	go func() {
-		defer close(betsReceived)
+		defer close(bets)
 		for msg := range msgs {
-			var betReceived models.BetReceived
+			var betReceived models.BetFromController
 			err := json.Unmarshal(msg.Body, &betReceived)
 			if err != nil {
 				log.Println("Failed to unmarshal bet received message", msg.Body)
@@ -64,12 +64,12 @@ func (c *BetReceivedConsumer) Consume(ctx context.Context) (<-chan models.BetRec
 
 			// Once context is cancelled, stop consuming messages.
 			select {
-			case betsReceived <- betReceived:
+			case bets <- betReceived:
 			case <-ctx.Done():
 				return
 			}
 		}
 	}()
 
-	return betsReceived, nil
+	return bets, nil
 }

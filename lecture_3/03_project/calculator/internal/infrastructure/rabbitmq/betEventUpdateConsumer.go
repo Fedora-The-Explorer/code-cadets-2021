@@ -7,17 +7,17 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/superbet-group/code-cadets-2021/lecture_3/03_project/controller/internal/infrastructure/rabbitmq/models"
+	"github.com/superbet-group/code-cadets-2021/lecture_3/03_project/calculator/internal/infrastructure/rabbitmq/models"
 )
 
 // BetCalculatedConsumer consumes calculated bets from the desired RabbitMQ queue.
-type BetCalculatedConsumer struct {
+type BetEventUpdateConsumer struct {
 	channel Channel
 	config  ConsumerConfig
 }
 
 // NewBetCalculatedConsumer creates and returns a new BetCalculatedConsumer.
-func NewBetCalculatedConsumer(channel Channel, config ConsumerConfig) (*BetCalculatedConsumer, error) {
+func NewBetEventUpdateConsumer(channel Channel, config ConsumerConfig) (*BetEventUpdateConsumer, error) {
 	_, err := channel.QueueDeclare(
 		config.Queue,
 		config.DeclareDurable,
@@ -30,7 +30,7 @@ func NewBetCalculatedConsumer(channel Channel, config ConsumerConfig) (*BetCalcu
 		return nil, errors.Wrap(err, "bet calculated consumer initialization failed")
 	}
 
-	return &BetCalculatedConsumer{
+	return &BetEventUpdateConsumer{
 		channel: channel,
 		config:  config,
 	}, nil
@@ -38,7 +38,7 @@ func NewBetCalculatedConsumer(channel Channel, config ConsumerConfig) (*BetCalcu
 
 // Consume consumes messages until the context is cancelled. An error will be returned if consuming
 // is not possible.
-func (c *BetCalculatedConsumer) Consume(ctx context.Context) (<-chan models.BetCalculated, error) {
+func (c *BetEventUpdateConsumer) Consume(ctx context.Context) (<-chan models.BetEventUpdate, error) {
 	msgs, err := c.channel.Consume(
 		c.config.Queue,
 		c.config.ConsumerName,
@@ -49,27 +49,27 @@ func (c *BetCalculatedConsumer) Consume(ctx context.Context) (<-chan models.BetC
 		c.config.Args,
 	)
 	if err != nil {
-		return nil, errors.Wrap(err, "bet calculated consumer failed to consume messages")
+		return nil, errors.Wrap(err, "event update consumer failed to consume messages")
 	}
 
-	betsCalculated := make(chan models.BetCalculated)
+	eventUpdates := make(chan models.BetEventUpdate)
 	go func() {
-		defer close(betsCalculated)
+		defer close(eventUpdates)
 		for msg := range msgs {
-			var betCalculated models.BetCalculated
-			err := json.Unmarshal(msg.Body, &betCalculated)
+			var eventUpdate models.BetEventUpdate
+			err := json.Unmarshal(msg.Body, &eventUpdate)
 			if err != nil {
-				log.Println("Failed to unmarshal bet calculated message", msg.Body)
+				log.Println("Failed to unmarshal bet received message", msg.Body)
 			}
 
 			// Once context is cancelled, stop consuming messages.
 			select {
-			case betsCalculated <- betCalculated:
+			case eventUpdates <- eventUpdate:
 			case <-ctx.Done():
 				return
 			}
 		}
 	}()
 
-	return betsCalculated, nil
+	return eventUpdates, nil
 }

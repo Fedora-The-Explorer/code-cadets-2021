@@ -1,27 +1,27 @@
 package bootstrap
 
 import (
-	"github.com/superbet-group/code-cadets-2021/lecture_3/03_project/controller/cmd/config"
-	"github.com/superbet-group/code-cadets-2021/lecture_3/03_project/controller/internal/domain/mappers"
-	"github.com/superbet-group/code-cadets-2021/lecture_3/03_project/controller/internal/engine"
-	"github.com/superbet-group/code-cadets-2021/lecture_3/03_project/controller/internal/engine/consumer"
-	"github.com/superbet-group/code-cadets-2021/lecture_3/03_project/controller/internal/engine/handler"
-	"github.com/superbet-group/code-cadets-2021/lecture_3/03_project/controller/internal/engine/publisher"
-	"github.com/superbet-group/code-cadets-2021/lecture_3/03_project/controller/internal/infrastructure/rabbitmq"
-	"github.com/superbet-group/code-cadets-2021/lecture_3/03_project/controller/internal/infrastructure/sqlite"
+	"github.com/superbet-group/code-cadets-2021/lecture_3/03_project/calculator/cmd/config"
+	"github.com/superbet-group/code-cadets-2021/lecture_3/03_project/calculator/internal/domain/mappers"
+	"github.com/superbet-group/code-cadets-2021/lecture_3/03_project/calculator/internal/engine"
+	"github.com/superbet-group/code-cadets-2021/lecture_3/03_project/calculator/internal/engine/consumer"
+	"github.com/superbet-group/code-cadets-2021/lecture_3/03_project/calculator/internal/engine/handler"
+	"github.com/superbet-group/code-cadets-2021/lecture_3/03_project/calculator/internal/engine/publisher"
+	"github.com/superbet-group/code-cadets-2021/lecture_3/03_project/calculator/internal/infrastructure/rabbitmq"
+	"github.com/superbet-group/code-cadets-2021/lecture_3/03_project/calculator/internal/infrastructure/sqlite"
 )
 
-func newBetReceivedConsumer(channel rabbitmq.Channel) *rabbitmq.BetReceivedConsumer {
-	betReceivedConsumer, err := rabbitmq.NewBetReceivedConsumer(
+func newBetFromControllerConsumer(channel rabbitmq.Channel) *rabbitmq.BetConsumer {
+	betReceivedConsumer, err := rabbitmq.NewBetFromControllerConsumer(
 		channel,
 		rabbitmq.ConsumerConfig{
-			Queue:             config.Cfg.Rabbit.ConsumerBetReceivedQueue,
+			Queue:             config.Cfg.Rabbit.ConsumerBetFromControllerQueue,
 			DeclareDurable:    config.Cfg.Rabbit.DeclareDurable,
 			DeclareAutoDelete: config.Cfg.Rabbit.DeclareAutoDelete,
 			DeclareExclusive:  config.Cfg.Rabbit.DeclareExclusive,
 			DeclareNoWait:     config.Cfg.Rabbit.DeclareNoWait,
 			DeclareArgs:       nil,
-			ConsumerName:      config.Cfg.Rabbit.ConsumerBetReceivedName,
+			ConsumerName:      config.Cfg.Rabbit.ConsumerBetFromControllerName,
 			AutoAck:           config.Cfg.Rabbit.ConsumerAutoAck,
 			Exclusive:         config.Cfg.Rabbit.ConsumerExclusive,
 			NoLocal:           config.Cfg.Rabbit.ConsumerNoLocal,
@@ -35,17 +35,17 @@ func newBetReceivedConsumer(channel rabbitmq.Channel) *rabbitmq.BetReceivedConsu
 	return betReceivedConsumer
 }
 
-func newBetCalculatedConsumer(channel rabbitmq.Channel) *rabbitmq.BetCalculatedConsumer {
-	betCalculatedConsumer, err := rabbitmq.NewBetCalculatedConsumer(
+func newEventUpdateConsumer(channel rabbitmq.Channel) *rabbitmq.EventUpdateConsumer {
+	betCalculatedConsumer, err := rabbitmq.NewEventUpdateConsumer(
 		channel,
 		rabbitmq.ConsumerConfig{
-			Queue:             config.Cfg.Rabbit.ConsumerBetCalculatedQueue,
+			Queue:             config.Cfg.Rabbit.ConsumerEventUpdateQueue,
 			DeclareDurable:    config.Cfg.Rabbit.DeclareDurable,
 			DeclareAutoDelete: config.Cfg.Rabbit.DeclareAutoDelete,
 			DeclareExclusive:  config.Cfg.Rabbit.DeclareExclusive,
 			DeclareNoWait:     config.Cfg.Rabbit.DeclareNoWait,
 			DeclareArgs:       nil,
-			ConsumerName:      config.Cfg.Rabbit.ConsumerBetCalculatedName,
+			ConsumerName:      config.Cfg.Rabbit.ConsumerEventUpdateName,
 			AutoAck:           config.Cfg.Rabbit.ConsumerAutoAck,
 			Exclusive:         config.Cfg.Rabbit.ConsumerExclusive,
 			NoLocal:           config.Cfg.Rabbit.ConsumerNoLocal,
@@ -59,8 +59,8 @@ func newBetCalculatedConsumer(channel rabbitmq.Channel) *rabbitmq.BetCalculatedC
 	return betCalculatedConsumer
 }
 
-func newConsumer(betReceivedConsumer consumer.BetReceivedConsumer, betCalculatedConsumer consumer.BetCalculatedConsumer) *consumer.Consumer {
-	return consumer.New(betReceivedConsumer, betCalculatedConsumer)
+func newConsumer(betConsumer consumer.BetConsumer, eventUpdateConsumer consumer.EventUpdateConsumer) *consumer.Consumer {
+	return consumer.New(betConsumer, eventUpdateConsumer)
 }
 
 func newBetMapper() *mappers.BetMapper {
@@ -75,11 +75,11 @@ func newHandler(betRepository handler.BetRepository) *handler.Handler {
 	return handler.New(betRepository)
 }
 
-func newBetPublisher(channel rabbitmq.Channel) *rabbitmq.BetPublisher {
-	betPublisher, err := rabbitmq.NewBetPublisher(
+func newBetCalculatedPublisher(channel rabbitmq.Channel) *rabbitmq.BetCalculatedPublisher {
+	betPublisher, err := rabbitmq.NewBetCalculatedPublisher(
 		channel,
 		rabbitmq.PublisherConfig{
-			Queue:             config.Cfg.Rabbit.PublisherBetQueue,
+			Queue:             config.Cfg.Rabbit.PublisherBetCalculatedQueue,
 			DeclareDurable:    config.Cfg.Rabbit.DeclareDurable,
 			DeclareAutoDelete: config.Cfg.Rabbit.DeclareAutoDelete,
 			DeclareExclusive:  config.Cfg.Rabbit.DeclareExclusive,
@@ -96,21 +96,21 @@ func newBetPublisher(channel rabbitmq.Channel) *rabbitmq.BetPublisher {
 	return betPublisher
 }
 
-func newPublisher(betPublisher publisher.BetPublisher) *publisher.Publisher {
-	return publisher.New(betPublisher)
+func newPublisher(betCalculatedPublisher publisher.BetCalculatedPublisher) *publisher.Publisher {
+	return publisher.New(betCalculatedPublisher)
 }
 
 func Engine(rabbitMqChannel rabbitmq.Channel, dbExecutor sqlite.DatabaseExecutor) *engine.Engine {
-	betReceivedConsumer := newBetReceivedConsumer(rabbitMqChannel)
-	betCalculatedConsumer := newBetCalculatedConsumer(rabbitMqChannel)
-	consumer := newConsumer(betReceivedConsumer, betCalculatedConsumer)
+	betConsumer := newBetConsumer(rabbitMqChannel)
+	eventUpdateConsumer := newEventUpdateConsumer(rabbitMqChannel)
+	consumer := newConsumer(betConsumer, eventUpdateConsumer)
 
 	betMapper := newBetMapper()
 	betRepository := newBetRepository(dbExecutor, betMapper)
 	handler := newHandler(betRepository)
 
-	betPublisher := newBetPublisher(rabbitMqChannel)
-	publisher := newPublisher(betPublisher)
+	betCalculatedPublisher := newBetCalculatedPublisher(rabbitMqChannel)
+	publisher := newPublisher(betCalculatedPublisher)
 
 	return engine.New(consumer, handler, publisher)
 }

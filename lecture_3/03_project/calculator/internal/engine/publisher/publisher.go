@@ -3,22 +3,22 @@ package publisher
 import (
 	"context"
 
-	rabbitmqmodels "github.com/superbet-group/code-cadets-2021/lecture_3/03_project/controller/internal/infrastructure/rabbitmq/models"
+	rabbitmqmodels "github.com/superbet-group/code-cadets-2021/lecture_3/03_project/calculator/internal/infrastructure/rabbitmq/models"
 )
 
 // Publisher offers methods for publishing into output queues.
 type Publisher struct {
-	betPublisher BetPublisher
+	betCalculatedPublisher BetCalculatedPublisher
 }
 
 // New creates and returns a new Publisher.
-func New(betPublisher BetPublisher) *Publisher {
+func New(betCalculatedPublisher BetCalculatedPublisher) *Publisher {
 	return &Publisher{
-		betPublisher: betPublisher,
+		betCalculatedPublisher: betCalculatedPublisher,
 	}
 }
 
 // PublishBets publishes into bets queue.
-func (p *Publisher) PublishBets(ctx context.Context, bets <-chan rabbitmqmodels.Bet) {
-	p.betPublisher.Publish(ctx, bets)
+func (p *Publisher) PublishCalculatedBets(ctx context.Context, bets <-chan rabbitmqmodels.BetCalculated) {
+	p.betCalculatedPublisher.Publish(ctx, bets)
 }
