@@ -45,7 +45,7 @@ func (c *Calculator) processBetsFromController(ctx context.Context) error {
 		return err
 	}
 
-	resultingBets := c.handler.HandleBetsReceived(ctx, consumedBetsReceived)
+	resultingBets := c.handler.HandleBetsFromController(ctx, consumedBetsReceived)
 	c.publisher.PublishCalculatedBets(ctx, resultingBets)
 
 	return nil
@@ -57,7 +57,7 @@ func (c *Calculator) processEventUpdates(ctx context.Context) error {
 		return err
 	}
 
-	resultingBets := c.handler.HandleBetsCalculated(ctx, consumedBetsCalculated)
+	resultingBets := c.handler.HandleEventUpdates(ctx, consumedBetsCalculated)
 	c.publisher.PublishCalculatedBets(ctx, resultingBets)
 
 	return nil

@@ -21,26 +21,24 @@ func New(betRepository BetRepository) *Handler {
 }
 
 // HandleBetsReceived handles bets received.
-func (h *Handler) HandleBetsReceived(
+func (h *Handler) HandleBetsFromController(
 	ctx context.Context,
-	betsReceived <-chan rabbitmqmodels.BetReceived,
-) <-chan rabbitmqmodels.Bet {
-	resultingBets := make(chan rabbitmqmodels.Bet)
+	betsFromController <-chan rabbitmqmodels.BetFromController,
+) <-chan rabbitmqmodels.BetCalculated {
+	betsCalculated := make(chan rabbitmqmodels.BetCalculated)
 
 	go func() {
-		defer close(resultingBets)
+		defer close(betsCalculated)
 
-		for betReceived := range betsReceived {
-			log.Println("Processing bet received, betId:", betReceived.Id)
+		for bet := range betsFromController {
+			log.Println("Processing bet received, betId:", bet.Id)
 
 			// Calculate the domain bet based on the incoming bet received.
 			domainBet := domainmodels.Bet{
-				Id:                   betReceived.Id,
-				CustomerId:           betReceived.CustomerId,
-				Status:               "active",
-				SelectionId:          betReceived.SelectionId,
-				SelectionCoefficient: betReceived.SelectionCoefficient,
-				Payment:              betReceived.Payment,
+				Id:                   bet.Id,
+				SelectionId:          bet.SelectionId,
+				SelectionCoefficient: bet.SelectionCoefficient,
+				Payment:              bet.Payment,
 			}
 
 			// Insert the domain bet into the repository.
@@ -49,81 +47,61 @@ func (h *Handler) HandleBetsReceived(
 				log.Println("Failed to insert bet, error: ", err)
 				continue
 			}
-
-			// Calculate the resulting bet, which should be published.
-			resultingBet := rabbitmqmodels.Bet{
-				Id:                   domainBet.Id,
-				CustomerId:           domainBet.CustomerId,
-				Status:               domainBet.Status,
-				SelectionId:          domainBet.SelectionId,
-				SelectionCoefficient: domainBet.SelectionCoefficient,
-				Payment:              domainBet.Payment,
-			}
-
-			select {
-			case resultingBets <- resultingBet:
-			case <-ctx.Done():
-				return
-			}
 		}
 	}()
 
-	return resultingBets
+	return betsCalculated
 }
 
 // HandleBetsCalculated handles bets calculated.
-func (h *Handler) HandleBetsCalculated(
+func (h *Handler) HandleEventUpdates(
 	ctx context.Context,
-	betsCalculated <-chan rabbitmqmodels.BetCalculated,
-) <-chan rabbitmqmodels.Bet {
-	resultingBets := make(chan rabbitmqmodels.Bet)
+	eventUpdates <-chan rabbitmqmodels.BetEventUpdate,
+) <-chan rabbitmqmodels.BetCalculated {
+	betsCalculated := make(chan rabbitmqmodels.BetCalculated)
 
 	go func() {
-		defer close(resultingBets)
+		defer close(betsCalculated)
 
-		for betCalculated := range betsCalculated {
-			log.Println("Processing bet calculated, betId:", betCalculated.Id)
+		for eventUpdate := range eventUpdates {
+			log.Println("Processing bet calculated, betId:", eventUpdate.Id)
 
 			// Fetch the domain bet.
-			domainBet, exists, err := h.betRepository.GetBetByID(ctx, betCalculated.Id)
+			domainBets, exists, err := h.betRepository.GetBetBySelectionID(ctx, eventUpdate.Id)
 			if err != nil {
 				log.Println("Failed to fetch a bet which should be updated, error: ", err)
 				continue
 			}
 			if !exists {
-				log.Println("A bet which should be updated does not exist, betId: ", betCalculated.Id)
+				log.Println("A bet which should be updated does not exist, betId: ", eventUpdate.Id)
 				continue
 			}
 
-			// Update the domain bet based on incoming changes.
-			domainBet.Status = betCalculated.Status
-			domainBet.Payout = betCalculated.Payout
+			for _, domainBet := range domainBets {
+				// Calculate the resulting bet, which should be published.
+				betCalculated := rabbitmqmodels.BetCalculated{
+					Id:                   domainBet.Id,
+				}
 
-			// Update the domain bet into the repository.
-			err = h.betRepository.UpdateBet(ctx, domainBet)
-			if err != nil {
-				log.Println("Failed to update bet, error: ", err)
-				continue
-			}
+				if eventUpdate.Outcome == "won" {
+					betCalculated.Status = "won"
+					betCalculated.Payout = domainBet.Payment * domainBet.SelectionCoefficient
+				} else if eventUpdate.Outcome == "lost" {
+					betCalculated.Status = "lost"
+					betCalculated.Payout = 0
+				} else {
+					log.Println("bets with following selection id do not exist: ", eventUpdate.Id)
+					break
+				}
 
-			// Calculate the resulting bet, which should be published.
-			resultingBet := rabbitmqmodels.Bet{
-				Id:                   domainBet.Id,
-				CustomerId:           domainBet.CustomerId,
-				Status:               domainBet.Status,
-				SelectionId:          domainBet.SelectionId,
-				SelectionCoefficient: domainBet.SelectionCoefficient,
-				Payment:              domainBet.Payment,
-				Payout:               domainBet.Payout,
-			}
-
-			select {
-			case resultingBets <- resultingBet:
-			case <-ctx.Done():
-				return
+				select {
+				case betsCalculated <- betCalculated:
+				case <-ctx.Done():
+					return
+				}
 			}
 		}
 	}()
 
-	return resultingBets
+	return betsCalculated
 }
