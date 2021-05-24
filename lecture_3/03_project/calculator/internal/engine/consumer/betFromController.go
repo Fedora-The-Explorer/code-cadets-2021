@@ -7,5 +7,5 @@ import (
 )
 
 type BetFromController interface {
-	Consume(ctx context.Context) (<-chan rabbitmqmodels.Bet, error)
+	Consume(ctx context.Context) (<-chan rabbitmqmodels.BetFromController, error)
 }

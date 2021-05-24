@@ -11,8 +11,8 @@ import (
 	"github.com/superbet-group/code-cadets-2021/lecture_3/03_project/calculator/internal/infrastructure/sqlite"
 )
 
-func newBetFromControllerConsumer(channel rabbitmq.Channel) *rabbitmq.BetConsumer {
-	betReceivedConsumer, err := rabbitmq.NewBetFromControllerConsumer(
+func newBetFromControllerConsumer(channel rabbitmq.Channel) *rabbitmq.BetFromControllerConsumer {
+	betFromControllerConsumer, err := rabbitmq.NewBetFromControllerConsumer(
 		channel,
 		rabbitmq.ConsumerConfig{
 			Queue:             config.Cfg.Rabbit.ConsumerBetFromControllerQueue,
@@ -32,11 +32,11 @@ func newBetFromControllerConsumer(channel rabbitmq.Channel) *rabbitmq.BetConsume
 	if err != nil {
 		panic(err)
 	}
-	return betReceivedConsumer
+	return betFromControllerConsumer
 }
 
-func newEventUpdateConsumer(channel rabbitmq.Channel) *rabbitmq.EventUpdateConsumer {
-	betCalculatedConsumer, err := rabbitmq.NewEventUpdateConsumer(
+func newEventUpdateConsumer(channel rabbitmq.Channel) *rabbitmq.BetEventUpdateConsumer {
+	betEventUpdate, err := rabbitmq.NewBetEventUpdateConsumer(
 		channel,
 		rabbitmq.ConsumerConfig{
 			Queue:             config.Cfg.Rabbit.ConsumerEventUpdateQueue,
@@ -56,10 +56,10 @@ func newEventUpdateConsumer(channel rabbitmq.Channel) *rabbitmq.EventUpdateConsu
 	if err != nil {
 		panic(err)
 	}
-	return betCalculatedConsumer
+	return betEventUpdate
 }
 
-func newConsumer(betConsumer consumer.BetConsumer, eventUpdateConsumer consumer.EventUpdateConsumer) *consumer.Consumer {
+func newConsumer(betConsumer consumer.BetFromController, eventUpdateConsumer consumer.BetEventUpdateConsumer) *consumer.Consumer {
 	return consumer.New(betConsumer, eventUpdateConsumer)
 }
 
@@ -100,10 +100,10 @@ func newPublisher(betCalculatedPublisher publisher.BetCalculatedPublisher) *publ
 	return publisher.New(betCalculatedPublisher)
 }
 
-func Engine(rabbitMqChannel rabbitmq.Channel, dbExecutor sqlite.DatabaseExecutor) *engine.Engine {
-	betConsumer := newBetConsumer(rabbitMqChannel)
+func CalculatorEngine(rabbitMqChannel rabbitmq.Channel, dbExecutor sqlite.DatabaseExecutor) *engine.Calculator {
+	betFromControllerConsumer := newBetFromControllerConsumer(rabbitMqChannel)
 	eventUpdateConsumer := newEventUpdateConsumer(rabbitMqChannel)
-	consumer := newConsumer(betConsumer, eventUpdateConsumer)
+	consumer := newConsumer(betFromControllerConsumer, eventUpdateConsumer)
 
 	betMapper := newBetMapper()
 	betRepository := newBetRepository(dbExecutor, betMapper)

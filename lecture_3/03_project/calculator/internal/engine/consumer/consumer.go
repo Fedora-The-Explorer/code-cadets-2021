@@ -21,7 +21,7 @@ func New(betFromController BetFromController, eventUpdateConsumer BetEventUpdate
 }
 
 // ConsumeBets consumes bets queue.
-func (c *Consumer) ConsumeBets(ctx context.Context) (<-chan rabbitmqmodels.BetFromController, error) {
+func (c *Consumer) ConsumeBetsFromController(ctx context.Context) (<-chan rabbitmqmodels.BetFromController, error) {
 	return c.betFromControllerConsumer.Consume(ctx)
 }
 

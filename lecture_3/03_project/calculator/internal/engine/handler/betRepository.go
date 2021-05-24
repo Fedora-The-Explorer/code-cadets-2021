@@ -8,5 +8,5 @@ import (
 
 type BetRepository interface {
 	InsertBet(ctx context.Context, bet domainmodels.Bet) error
-	GetBetBySelectionID(ctx context.Context, id string) ([]domainmodels.Bet, bool, error)
+	GetBetsBySelectionID(ctx context.Context, id string) ([]domainmodels.Bet, bool, error)
 }
