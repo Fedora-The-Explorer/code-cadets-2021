@@ -10,13 +10,13 @@ import (
 	"github.com/superbet-group/code-cadets-2021/lecture_3/03_project/calculator/internal/infrastructure/rabbitmq/models"
 )
 
-// BetReceivedConsumer consumes received bets from the desired RabbitMQ queue.
+// BetFromControllerConsumer consumes received bets from the desired RabbitMQ queue.
 type BetFromControllerConsumer struct {
 	channel Channel
 	config  ConsumerConfig
 }
 
-// NewBetReceivedConsumer creates and returns a new BetReceivedConsumer.
+// NewBetFromControllerConsumer creates and returns a new BetFromControllerConsumer.
 func NewBetFromControllerConsumer(channel Channel, config ConsumerConfig) (*BetFromControllerConsumer, error) {
 	_, err := channel.QueueDeclare(
 		config.Queue,

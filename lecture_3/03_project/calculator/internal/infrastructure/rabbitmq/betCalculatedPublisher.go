@@ -17,7 +17,7 @@ type BetCalculatedPublisher struct {
 	config  PublisherConfig
 }
 
-// NewBetPublisher creates and returns a new BetPublisher.
+// NewCalculatedPublisher creates and returns a new BetCalculatedPublisher.
 func NewBetCalculatedPublisher(channel Channel, config PublisherConfig) (*BetCalculatedPublisher, error) {
 	_, err := channel.QueueDeclare(
 		config.Queue,
