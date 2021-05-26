@@ -20,7 +20,7 @@ func New(betRepository BetRepository) *Handler {
 	}
 }
 
-// HandleBetsReceived handles bets received.
+// HandleBetsFromController handles bets from controller.
 func (h *Handler) HandleBetsFromController(
 	ctx context.Context,
 	betsFromController <-chan rabbitmqmodels.BetFromController,
@@ -33,7 +33,6 @@ func (h *Handler) HandleBetsFromController(
 		for bet := range betsFromController {
 			log.Println("Processing bet received, betId:", bet.Id)
 
-			// Calculate the domain bet based on the incoming bet received.
 			domainBet := domainmodels.Bet{
 				Id:                   bet.Id,
 				SelectionId:          bet.SelectionId,
@@ -41,7 +40,6 @@ func (h *Handler) HandleBetsFromController(
 				Payment:              bet.Payment,
 			}
 
-			// Insert the domain bet into the repository.
 			err := h.betRepository.InsertBet(ctx, domainBet)
 			if err != nil {
 				log.Println("Failed to insert bet, error: ", err)
@@ -53,7 +51,7 @@ func (h *Handler) HandleBetsFromController(
 	return betsCalculated
 }
 
-// HandleBetsCalculated handles bets calculated.
+// HandleEventUpdates handles updated bets.
 func (h *Handler) HandleEventUpdates(
 	ctx context.Context,
 	eventUpdates <-chan rabbitmqmodels.BetEventUpdate,
@@ -64,7 +62,7 @@ func (h *Handler) HandleEventUpdates(
 		defer close(betsCalculated)
 
 		for eventUpdate := range eventUpdates {
-			log.Println("Processing bet calculated, betId:", eventUpdate.Id)
+			log.Println("Processing event updates, betId:", eventUpdate.Id)
 
 			// Fetch the domain bet.
 			domainBets, exists, err := h.betRepository.GetBetsBySelectionID(ctx, eventUpdate.Id)

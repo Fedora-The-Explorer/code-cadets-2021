@@ -18,7 +18,7 @@ func New(betCalculatedPublisher BetCalculatedPublisher) *Publisher {
 	}
 }
 
-// PublishBets publishes into bets queue.
+// PublishCalculatedBets publishes calculated bets into the queue.
 func (p *Publisher) PublishCalculatedBets(ctx context.Context, bets <-chan rabbitmqmodels.BetCalculated) {
 	p.betCalculatedPublisher.Publish(ctx, bets)
 }

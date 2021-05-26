@@ -5,15 +5,13 @@ import (
 	"log"
 )
 
-// Engine is the main component, responsible for consuming received bets and calculated bets,
-// processing them and publishing the resulting bets.
 type Calculator struct {
 	consumer  Consumer
 	handler   Handler
 	publisher Publisher
 }
 
-// New creates and returns a new calculatorengine.
+// New creates and returns a new Calculator.
 func New(consumer Consumer, handler Handler, publisher Publisher) *Calculator {
 	return &Calculator{
 		consumer:  consumer,
@@ -22,7 +20,7 @@ func New(consumer Consumer, handler Handler, publisher Publisher) *Calculator {
 	}
 }
 
-// Start will run the calculatorengine.
+// Start will run the calculatorEngine.
 func (c *Calculator) Start(ctx context.Context) {
 	err := c.processBetsFromController(ctx)
 	if err != nil {
