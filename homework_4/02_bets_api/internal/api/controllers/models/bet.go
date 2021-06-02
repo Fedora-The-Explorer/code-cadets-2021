@@ -6,7 +6,7 @@ type Bet struct {
 	CustomerId           string
 	Status               string
 	SelectionId          string
-	SelectionCoefficient int
-	Payment              int
-	Payout               int
+	SelectionCoefficient float64
+	Payment              float64
+	Payout               float64
 }
