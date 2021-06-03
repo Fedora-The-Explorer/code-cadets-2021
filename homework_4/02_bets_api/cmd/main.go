@@ -14,7 +14,8 @@ func main() {
 	config.Load()
 
 	signalHandler := bootstrap.SignalHandler()
-	api := bootstrap.Api()
+	db := bootstrap.Sqlite()
+	api := bootstrap.Api(db)
 
 	log.Println("Bootstrap finished. Event API is starting")
 
