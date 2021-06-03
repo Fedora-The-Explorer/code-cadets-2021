@@ -17,7 +17,6 @@ func newController(response controllers.BetResponse) *controllers.Controller {
 	return controllers.NewController(response)
 }
 
-
 func newBetMapper() *mappers.BetMapper {
 	return mappers.NewBetMapper()
 }

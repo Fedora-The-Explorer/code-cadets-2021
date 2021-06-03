@@ -1,7 +1,6 @@
 package bootstrap
 
 import (
-	"github.com/streadway/amqp"
 	"database/sql"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/superbet-group/code-cadets-2021/homework_4/02_bets_api/cmd/config"
@@ -9,7 +8,7 @@ import (
 
 // RabbitMq bootstraps the rabbit mq connection.
 func Sqlite() *sql.DB {
-	bd, err := sql.Open("sqlite3", config.Cfg.SqliteDatabase)
+	db, err := sql.Open("sqlite3", config.Cfg.SqliteDatabase)
 	if err != nil {
 		panic(err)
 	}
