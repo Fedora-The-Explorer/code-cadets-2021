@@ -140,7 +140,7 @@ func (r *BetRepository) GetBetsByStatus(ctx context.Context, status string) ([]d
 		return []domainmodels.BetResponseDto{}, nil
 	}
 	if err != nil {
-		return []domainmodels.BetResponseDto{}, errors.Wrap(err, "bet repository failed to get bets with status: "+status)
+		return []domainmodels.BetResponseDto{}, errors.Wrap(err, "bet repository failed to get bets with status "+status)
 	}
 
 	var domainBets []domainmodels.BetResponseDto

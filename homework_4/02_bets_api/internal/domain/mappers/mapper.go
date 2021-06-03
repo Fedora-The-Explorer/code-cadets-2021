@@ -40,7 +40,7 @@ func (m *BetMapper) MapStorageBetToDomainBet(storageBet storagemodels.Bet) domai
 	}
 }
 
-func (m *BetMapper) MapStorageBetToDomainBetReduced(storageBet storagemodels.Bet) domainmodels.BetResponseDto {
+func (m *BetMapper) MapStorageBetToDomainBetResponse(storageBet storagemodels.Bet) domainmodels.BetResponseDto {
 	return domainmodels.BetResponseDto{
 		Id:                   storageBet.Id,
 		Status:               storageBet.Status,
