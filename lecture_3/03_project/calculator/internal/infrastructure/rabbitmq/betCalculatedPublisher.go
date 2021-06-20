@@ -8,17 +8,17 @@ import (
 	"github.com/pkg/errors"
 	"github.com/streadway/amqp"
 
-	"github.com/superbet-group/code-cadets-2021/lecture_3/03_project/controller/internal/infrastructure/rabbitmq/models"
+	"github.com/superbet-group/code-cadets-2021/lecture_3/03_project/calculator/internal/infrastructure/rabbitmq/models"
 )
 
 // BetPublisher publishes bets into the desired RabbitMQ queue.
-type BetPublisher struct {
+type BetCalculatedPublisher struct {
 	channel Channel
 	config  PublisherConfig
 }
 
-// NewBetPublisher creates and returns a new BetPublisher.
-func NewBetPublisher(channel Channel, config PublisherConfig) (*BetPublisher, error) {
+// NewCalculatedPublisher creates and returns a new BetCalculatedPublisher.
+func NewBetCalculatedPublisher(channel Channel, config PublisherConfig) (*BetCalculatedPublisher, error) {
 	_, err := channel.QueueDeclare(
 		config.Queue,
 		config.DeclareDurable,
@@ -31,14 +31,14 @@ func NewBetPublisher(channel Channel, config PublisherConfig) (*BetPublisher, er
 		return nil, errors.Wrap(err, "bet publisher initialization failed")
 	}
 
-	return &BetPublisher{
+	return &BetCalculatedPublisher{
 		channel: channel,
 		config:  config,
 	}, nil
 }
 
 // Publish publishes messages until the context is cancelled.
-func (p *BetPublisher) Publish(ctx context.Context, bets <-chan models.Bet) {
+func (p *BetCalculatedPublisher) Publish(ctx context.Context, bets <-chan models.BetCalculated) {
 	go func() {
 		for bet := range bets {
 			select {

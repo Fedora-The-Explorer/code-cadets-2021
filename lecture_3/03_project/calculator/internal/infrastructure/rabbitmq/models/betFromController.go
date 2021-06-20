@@ -1,7 +1,7 @@
 package models
 
 // Bet represents a DTO for bets.
-type Bet struct {
+type BetFromController struct {
 	Id                   string  `json:"id"`
 	CustomerId           string  `json:"customerId"`
 	Status               string  `json:"status"`

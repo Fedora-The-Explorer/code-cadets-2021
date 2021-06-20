@@ -1,4 +1,4 @@
-package engine
+package consumer
 
 import (
 	"context"
@@ -6,6 +6,6 @@ import (
 	rabbitmqmodels "github.com/superbet-group/code-cadets-2021/lecture_3/03_project/calculator/internal/infrastructure/rabbitmq/models"
 )
 
-type Publisher interface {
-	PublishCalculatedBets(ctx context.Context, bets <-chan rabbitmqmodels.BetCalculated)
+type BetFromController interface {
+	Consume(ctx context.Context) (<-chan rabbitmqmodels.BetFromController, error)
 }
