@@ -78,7 +78,7 @@ func (h *Handler) HandleEventUpdates(
 			for _, domainBet := range domainBets {
 				// Calculate the resulting bet, which should be published.
 				betCalculated := rabbitmqmodels.BetCalculated{
-					Id:                   domainBet.Id,
+					Id: domainBet.Id,
 				}
 
 				if eventUpdate.Outcome == "won" {
@@ -88,7 +88,7 @@ func (h *Handler) HandleEventUpdates(
 					betCalculated.Status = "lost"
 					betCalculated.Payout = 0
 				} else {
-					log.Println("bets with following selection id do not exist: ", eventUpdate.Id)
+					log.Println("given event updates do not exist: ", eventUpdate.Id)
 					break
 				}
 
