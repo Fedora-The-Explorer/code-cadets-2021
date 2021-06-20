@@ -8,11 +8,14 @@ import (
 func main() {
 	signalHandler := bootstrap.NewSignalHandler()
 
-	feed := bootstrap.NewAxilisOfferFeed()
+	firstFeed := bootstrap.NewAxilisOfferFeed()
+	secondFeed := bootstrap.NewAxilisOfferFeedSecond()
+	mergedFeeds := bootstrap.NewFeedMerger(firstFeed, secondFeed)
+
 	queue := bootstrap.NewOrderedQueue()
-	processingService := bootstrap.FeedProcessingService(feed, queue)
+	processingService := bootstrap.FeedProcessingService(mergedFeeds, queue)
 
 	// blocking call, start "the application"
-	tasks.RunTasks(signalHandler, feed, queue, processingService)
+	tasks.RunTasks(signalHandler, firstFeed, secondFeed, mergedFeeds, queue, processingService)
 
 }

@@ -75,7 +75,9 @@ func (a *AxilisOfferFeed) processResponse(ctx context.Context, response *http.Re
 		}
 	}
 }
-
+func (a *AxilisOfferFeed) String() string {
+	return "axillis offer feed ONE"
+}
 func (a *AxilisOfferFeed) GetUpdates() chan models.Odd {
 	return a.updates
 }

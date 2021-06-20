@@ -1,4 +1,4 @@
- package services
+package services
 
 import (
 	"context"
@@ -7,14 +7,14 @@ import (
 )
 
 type FeedProcessorService struct {
-	feed Feed
+	feed  Feed
 	queue Queue
 }
 
 func NewFeedProcessorService(feed Feed, queue Queue) *FeedProcessorService {
 	// it should receive "Feed" & "Queue" interfaces through constructor
 	return &FeedProcessorService{
-		feed: feed,
+		feed:  feed,
 		queue: queue,
 	}
 }
@@ -28,7 +28,7 @@ func (f *FeedProcessorService) Start(ctx context.Context) error {
 
 	// repeatedly:
 	// - range over updates channel
-	for update := range updates{
+	for update := range updates {
 		// - multiply each odd with 2
 		update.Coefficient *= 2
 		// - send it to source channel
