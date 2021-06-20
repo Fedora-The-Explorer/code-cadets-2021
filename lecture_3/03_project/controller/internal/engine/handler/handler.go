@@ -124,6 +124,5 @@ func (h *Handler) HandleBetsCalculated(
 			}
 		}
 	}()
-
 	return resultingBets
 }
